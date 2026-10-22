@@ -1,0 +1,21 @@
+# Render Blueprint — wariant płatny (Starter) z trwałym dyskiem: pliki projektów przetrwają restarty.
+# Wariant darmowy: patrz README (bez dysku, z auto-pingiem).
+services:
+  - type: web
+    name: agent-kodu
+    runtime: docker
+    plan: starter
+    healthCheckPath: /api/health
+    envVars:
+      - key: APP_PASSWORD
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: NVIDIA_API_KEY
+        sync: false
+      - key: DATA_DIR
+        value: /data
+    disk:
+      name: agent-data
+      mountPath: /data
+      sizeGB: 5

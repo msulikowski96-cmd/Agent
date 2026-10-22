@@ -1,0 +1,376 @@
+<!doctype html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0e1116">
+<link rel="manifest" href="/manifest.json">
+<link rel="icon" href="/icon.svg">
+<title>Agent Kodu</title>
+<style>
+:root{
+  --bg:#0e1116; --panel:#161b22; --panel2:#1c232c; --line:#2a323d; --text:#e6edf3; --muted:#8b97a5;
+  --acc:#7ee787; --acc2:#3fb950; --blue:#79c0ff; --warn:#e3b341; --err:#ff7b72; --r:14px;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--bg);color:var(--text);font:15px/1.45 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+a{color:var(--blue)}
+header{position:sticky;top:0;z-index:5;display:flex;align-items:center;gap:10px;padding:12px 16px;
+  padding-top:max(12px,env(safe-area-inset-top));background:rgba(14,17,22,.92);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+header h1{font-size:17px;margin:0;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.logo{width:26px;height:26px;border-radius:8px;background:linear-gradient(135deg,var(--acc),var(--blue));display:grid;place-items:center;color:#0e1116;font-weight:800;font-family:var(--mono);font-size:13px;flex:none}
+main{max-width:760px;margin:0 auto;padding:16px 16px 120px}
+button,.btn{font:inherit;border:1px solid var(--line);background:var(--panel2);color:var(--text);border-radius:12px;padding:10px 14px;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:6px;justify-content:center}
+button:active{transform:scale(.98)}
+button.primary{background:var(--acc2);border-color:var(--acc2);color:#04130a;font-weight:650}
+button.danger{color:var(--err)}
+button.ghost{background:transparent;border-color:transparent;color:var(--muted);padding:8px}
+button:disabled{opacity:.45}
+input,textarea,select{width:100%;font:inherit;color:var(--text);background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:11px 12px;outline:none}
+input:focus,textarea:focus,select:focus{border-color:var(--blue)}
+textarea{resize:vertical;min-height:110px}
+label{display:block;font-size:13px;color:var(--muted);margin:14px 0 6px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:14px;margin-bottom:10px}
+.row{display:flex;gap:8px;align-items:center}
+.row > *{flex:1}
+.muted{color:var(--muted)}
+.small{font-size:12.5px}
+.job{display:block;color:inherit;text-decoration:none}
+.job .t{font-weight:600;margin-bottom:4px}
+.badge{display:inline-flex;align-items:center;gap:5px;font-size:12px;padding:3px 8px;border-radius:99px;background:var(--panel2);border:1px solid var(--line);white-space:nowrap}
+.badge::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--muted)}
+.s-running::before,.s-queued::before{background:var(--warn);animation:pulse 1.2s infinite}
+.s-done::before{background:var(--acc)}
+.s-error::before,.s-interrupted::before{background:var(--err)}
+.s-paused::before,.s-stopped::before{background:var(--blue)}
+@keyframes pulse{50%{opacity:.25}}
+.fab{position:fixed;right:18px;bottom:max(18px,env(safe-area-inset-bottom));z-index:6;border-radius:99px;padding:14px 20px;box-shadow:0 8px 30px rgba(0,0,0,.5)}
+.tabs{display:flex;gap:6px;margin:12px 0;position:sticky;top:57px;z-index:4;background:var(--bg);padding:6px 0}
+.tabs button{flex:1;padding:8px}
+.tabs button.on{background:var(--text);color:var(--bg);border-color:var(--text);font-weight:600}
+.ev{border-left:3px solid var(--line);padding:6px 10px;margin:6px 0;white-space:pre-wrap;word-break:break-word;font-size:14px}
+.ev .k{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:2px}
+.ev.user{border-color:var(--blue);background:rgba(121,192,255,.07);border-radius:0 10px 10px 0}
+.ev.assistant{border-color:var(--acc)}
+.ev.tool{font-family:var(--mono);font-size:12.5px;color:var(--blue);border-color:transparent;padding:2px 10px}
+.ev.result,.ev.tool_error{font-family:var(--mono);font-size:12px;color:var(--muted);border-color:transparent;padding:0 10px}
+.ev.tool_error{color:#ffa198}
+.ev.info{color:var(--muted);font-size:13px;border-color:transparent}
+.ev.error{border-color:var(--err);color:var(--err)}
+.ev.done{border-color:var(--acc);background:rgba(126,231,135,.08);border-radius:0 10px 10px 0}
+details summary{cursor:pointer;list-style:none}
+details summary::-webkit-details-marker{display:none}
+details pre{margin:4px 0 0;max-height:260px;overflow:auto;background:var(--panel);padding:8px;border-radius:8px}
+.plan li{margin:6px 0;list-style:none;padding-left:26px;position:relative}
+.plan li::before{content:"○";position:absolute;left:4px;color:var(--muted)}
+.plan li.d{color:var(--muted);text-decoration:line-through}
+.plan li.d::before{content:"✓";color:var(--acc);text-decoration:none}
+.plan ul{padding:0;margin:0}
+.file{display:flex;justify-content:space-between;gap:10px;padding:9px 4px;border-bottom:1px solid var(--line);font-family:var(--mono);font-size:13px;cursor:pointer;word-break:break-all}
+.file span:last-child{color:var(--muted);white-space:nowrap}
+.composer{position:fixed;left:0;right:0;bottom:0;z-index:6;background:rgba(14,17,22,.96);border-top:1px solid var(--line);padding:10px 12px;padding-bottom:max(10px,env(safe-area-inset-bottom))}
+.composer .in{max-width:760px;margin:0 auto;display:flex;gap:8px;align-items:flex-end}
+.composer textarea{min-height:44px;max-height:160px;padding:10px 12px}
+.composer button{height:44px}
+.modal{position:fixed;inset:0;z-index:20;background:rgba(0,0,0,.6);display:flex;align-items:flex-end}
+.modal .sheet{background:var(--bg);width:100%;max-height:92vh;border-radius:18px 18px 0 0;border-top:1px solid var(--line);display:flex;flex-direction:column}
+.modal .sheet header{position:static;border-radius:18px 18px 0 0}
+.modal pre{margin:0;padding:14px;overflow:auto;font:12.5px/1.5 var(--mono);flex:1;white-space:pre}
+.stats{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:90px;z-index:30;background:var(--text);color:var(--bg);padding:10px 16px;border-radius:12px;font-weight:500;max-width:90vw}
+.center{text-align:center}
+.empty{padding:40px 10px;text-align:center;color:var(--muted)}
+.hint{font-size:12.5px;color:var(--muted);margin-top:6px}
+.summary{white-space:pre-wrap}
+.spin{display:inline-block;width:14px;height:14px;border:2px solid var(--muted);border-top-color:transparent;border-radius:50%;animation:sp 0.8s linear infinite;vertical-align:-2px}
+@keyframes sp{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+const $ = (s, el=document) => el.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const STATUS = {queued:"w kolejce", running:"pracuje", done:"gotowe", error:"błąd", stopped:"zatrzymane", paused:"wstrzymane (limit)", interrupted:"przerwane"};
+let token = localStorage.getItem("agent_token") || "";
+let timers = [];
+let settingsCache = null;
+
+function clearTimers(){ timers.forEach(clearTimeout); timers = []; }
+function toast(msg){ const t=document.createElement("div"); t.className="toast"; t.textContent=msg; document.body.append(t); setTimeout(()=>t.remove(),2600); }
+function ago(ts){ const s=(Date.now()/1000-ts); if(s<60) return "przed chwilą"; if(s<3600) return Math.floor(s/60)+" min temu"; if(s<86400) return Math.floor(s/3600)+" godz. temu"; return new Date(ts*1000).toLocaleString("pl-PL"); }
+function fmtSize(b){ return b<1024? b+" B" : b<1048576? (b/1024).toFixed(1)+" KB" : (b/1048576).toFixed(1)+" MB"; }
+
+async function api(path, opts={}){
+  const res = await fetch(path, {...opts, headers:{"Content-Type":"application/json", "Authorization":"Bearer "+token, ...(opts.headers||{})},
+    body: opts.body && typeof opts.body!=="string" ? JSON.stringify(opts.body) : opts.body});
+  if(res.status===401 && path!=="/api/login"){ token=""; localStorage.removeItem("agent_token"); location.hash="#/login"; throw new Error("Zaloguj się"); }
+  const data = await res.json().catch(()=>({}));
+  if(!res.ok) throw new Error(data.error || ("HTTP "+res.status));
+  return data;
+}
+
+function shell(title, inner, {back=null, right=""}={}){
+  $("#app").innerHTML = `
+    <header>${back? `<button class="ghost" onclick="location.hash='${back}'">←</button>` : `<div class="logo">&lt;/&gt;</div>`}
+      <h1>${esc(title)}</h1>${right}</header>
+    <main>${inner}</main>`;
+}
+
+// ---------------- widoki ----------------
+function viewLogin(){
+  shell("Agent Kodu", `
+    <div class="card" style="margin-top:30px">
+      <h2 style="margin:0 0 6px">Zaloguj się</h2>
+      <p class="muted small" style="margin:0">Hasło ustawiasz zmienną <code>APP_PASSWORD</code> na serwerze (albo znajdziesz wygenerowane w logach przy starcie).</p>
+      <form id="f"><label>Hasło</label><input type="password" id="pw" autocomplete="current-password" required>
+      <button class="primary" style="width:100%;margin-top:14px">Wejdź</button></form>
+    </div>`);
+  $("#f").onsubmit = async e => {
+    e.preventDefault();
+    try{ const r = await api("/api/login",{method:"POST", body:{password:$("#pw").value}}); token=r.token; localStorage.setItem("agent_token",token); location.hash="#/"; }
+    catch(err){ toast(err.message); }
+  };
+}
+
+async function viewList(){
+  shell("Agent Kodu", `<div id="list"><div class="empty"><span class="spin"></span></div></div>
+    <button class="primary fab" onclick="location.hash='#/new'">＋ Nowe zadanie</button>`,
+    {right:`<button class="ghost" onclick="location.hash='#/settings'" aria-label="Ustawienia">⚙︎</button>`});
+  const load = async () => {
+    try{
+      const {jobs} = await api("/api/jobs");
+      const el = $("#list"); if(!el) return;
+      el.innerHTML = jobs.length ? jobs.map(j => `
+        <a class="card job" href="#/job/${j.id}">
+          <div class="row" style="align-items:flex-start"><div class="t">${esc(j.title)}</div>
+            <div style="flex:none"><span class="badge s-${j.status}">${STATUS[j.status]||j.status}</span></div></div>
+          <div class="muted small">${esc(j.provider)} · ${esc(j.model)} · ${j.steps} kroków · ${ago(j.updated)}</div>
+        </a>`).join("") :
+        `<div class="empty"><div style="font-size:40px">🤖</div><p>Brak zadań.<br>Napisz agentowi, co ma zbudować — będzie pracował na serwerze, nawet gdy zamkniesz przeglądarkę.</p></div>`;
+      if(jobs.some(j=>["running","queued"].includes(j.status))) timers.push(setTimeout(load, 4000));
+    }catch(e){ toast(e.message); }
+  };
+  load();
+}
+
+async function getSettings(force){ if(!settingsCache || force) settingsCache = await api("/api/settings"); return settingsCache; }
+
+async function fillModels(provider, input, listEl, force=false){
+  const s = await getSettings();
+  const p = s.providers[provider];
+  let opts = [...p.suggested];
+  listEl.innerHTML = opts.map(m=>`<option value="${esc(m)}">`).join("");
+  if(force || !input.value) input.value = s["default_model_"+provider] || p.default_model;
+  try{
+    const r = await api("/api/models?provider="+provider);
+    if(r.models && r.models.length){ opts = [...new Set([...opts, ...r.models])]; listEl.innerHTML = opts.map(m=>`<option value="${esc(m)}">`).join(""); }
+    return r;
+  }catch(e){ return {error:e.message}; }
+}
+
+async function viewNew(){
+  const s = await getSettings(true).catch(e=>{toast(e.message); return null;}); if(!s) return;
+  const noKeys = !s.providers.gemini.key && !s.providers.nvidia.key;
+  shell("Nowe zadanie", `
+    ${noKeys? `<div class="card" style="border-color:var(--warn)">⚠️ Nie masz jeszcze klucza API. <a href="#/settings">Dodaj go w Ustawieniach</a>.</div>`:""}
+    <form id="f">
+      <label>Co agent ma zbudować?</label>
+      <textarea id="prompt" rows="9" placeholder="Np. Zrób aplikację webową do śledzenia wydatków: dodawanie kategorii, wykres miesięczny, zapis w localStorage, ciemny motyw. Ma działać na telefonie." required></textarea>
+      <div class="row">
+        <div><label>Model od</label><select id="provider"><option value="gemini">Google Gemini</option><option value="nvidia">NVIDIA NIM</option></select></div>
+        <div><label>Limit kroków</label><input id="steps" type="number" min="5" max="1000" value="80"></div>
+      </div>
+      <label>Model</label>
+      <div class="row"><input id="model" list="models" autocomplete="off" spellcheck="false"><button type="button" id="refresh" style="flex:none">↻</button></div>
+      <datalist id="models"></datalist>
+      <div class="hint" id="mhint">Wpisz lub wybierz z listy. ↻ pobiera aktualną listę modeli z API.</div>
+      <label>Nazwa (opcjonalnie)</label><input id="title" placeholder="np. Tracker wydatków">
+      <button class="primary" style="width:100%;margin-top:18px;padding:14px">🚀 Uruchom agenta</button>
+      <p class="hint center">Po starcie możesz zamknąć przeglądarkę — praca trwa na serwerze.</p>
+    </form>`, {back:"#/"});
+  const prov=$("#provider"), model=$("#model"), list=$("#models");
+  prov.value = s.default_provider || "gemini";
+  if(!s.providers[prov.value].key && s.providers.nvidia.key) prov.value = "nvidia";
+  const load = async (force) => { const r = await fillModels(prov.value, model, list, force); $("#mhint").textContent = r && r.error ? "Nie udało się pobrać listy: "+r.error : "Wpisz lub wybierz z listy. ↻ pobiera aktualną listę modeli z API."; };
+  load(true);
+  prov.onchange = () => load(true);
+  $("#refresh").onclick = () => { toast("Pobieram listę modeli…"); load(false); };
+  const draft = localStorage.getItem("agent_draft"); if(draft) $("#prompt").value = draft;
+  $("#prompt").oninput = e => localStorage.setItem("agent_draft", e.target.value);
+  $("#f").onsubmit = async e => {
+    e.preventDefault();
+    const btn = e.submitter; btn.disabled = true;
+    try{
+      const r = await api("/api/jobs",{method:"POST", body:{prompt:$("#prompt").value, provider:prov.value, model:model.value, max_steps:+$("#steps").value, title:$("#title").value}});
+      localStorage.removeItem("agent_draft");
+      location.hash = "#/job/"+r.id;
+    }catch(err){ toast(err.message); btn.disabled=false; }
+  };
+}
+
+let jobState = {};
+async function viewJob(id){
+  jobState = {id, lastEv:0, tab:"log", job:null, autoscroll:true};
+  shell("Zadanie", `<div id="head"><div class="empty"><span class="spin"></span></div></div>
+    <div class="tabs"><button data-t="log" class="on">Przebieg</button><button data-t="plan">Plan</button><button data-t="files">Pliki</button></div>
+    <div id="tab-log"><div id="events"></div></div>
+    <div id="tab-plan" hidden></div>
+    <div id="tab-files" hidden></div>
+    <div class="composer"><div class="in">
+      <textarea id="msg" rows="1" placeholder="Kolejne polecenie dla agenta…"></textarea>
+      <button class="primary" id="send" style="flex:none">➤</button></div></div>`, {back:"#/"});
+  document.querySelectorAll(".tabs button").forEach(b => b.onclick = () => switchTab(b.dataset.t));
+  $("#send").onclick = sendMessage;
+  $("#msg").addEventListener("input", e => { e.target.style.height="auto"; e.target.style.height=Math.min(e.target.scrollHeight,160)+"px"; });
+  window.onscroll = () => { jobState.autoscroll = (window.innerHeight + window.scrollY) >= document.body.scrollHeight - 120; };
+  pollJob();
+}
+
+function switchTab(t){
+  jobState.tab = t;
+  document.querySelectorAll(".tabs button").forEach(b => b.classList.toggle("on", b.dataset.t===t));
+  ["log","plan","files"].forEach(x => $("#tab-"+x).hidden = x!==t);
+  if(t==="files") loadFiles();
+  if(t==="plan") renderPlan();
+}
+
+async function pollJob(){
+  const id = jobState.id;
+  try{
+    const job = await api("/api/jobs/"+id);
+    if(jobState.id!==id) return;
+    jobState.job = job;
+    renderHead(job);
+    const {events} = await api(`/api/jobs/${id}/events?after=${jobState.lastEv}`);
+    if(events.length){ renderEvents(events); jobState.lastEv = events[events.length-1].id; }
+    if(jobState.tab==="plan") renderPlan();
+    const busy = ["running","queued"].includes(job.status);
+    $("#send").disabled = busy;
+    $("#msg").placeholder = busy ? "Agent pracuje… możesz zamknąć przeglądarkę" : (job.status==="paused" ? "Napisz „kontynuuj”, aby pracował dalej" : "Kolejne polecenie dla agenta…");
+    timers.push(setTimeout(pollJob, busy ? 2000 : 8000));
+  }catch(e){ if(String(e.message).includes("Nie znaleziono")){ location.hash="#/"; return; } timers.push(setTimeout(pollJob, 5000)); }
+}
+
+function renderHead(j){
+  $("header h1").textContent = j.title;
+  const busy = ["running","queued"].includes(j.status);
+  $("#head").innerHTML = `<div class="card">
+    <div class="row"><span class="badge s-${j.status}" style="flex:none">${STATUS[j.status]||j.status}</span><span></span>
+      ${busy? `<button class="danger" style="flex:none" onclick="stopJob()">■ Stop</button>`:""}
+      <a class="btn" style="flex:none" href="/api/jobs/${j.id}/download?t=${token}">⬇ ZIP</a>
+      <button class="ghost" style="flex:none" onclick="deleteJob()" aria-label="Usuń">🗑</button></div>
+    <div class="stats small muted">
+      <span>${esc(j.provider)} · ${esc(j.model)}</span><span>· krok ${j.run_steps}/${j.max_steps} (łącznie ${j.steps})</span>
+      <span>· tokeny ${((j.tokens_in||0)/1000).toFixed(1)}k / ${((j.tokens_out||0)/1000).toFixed(1)}k</span></div>
+    ${j.error? `<div class="small" style="color:var(--err);margin-top:8px;white-space:pre-wrap">${esc(j.error)}</div>`:""}
+  </div>`;
+}
+
+function renderEvents(evs){
+  const box = $("#events"); if(!box) return;
+  const html = evs.map(e => {
+    const t = esc(e.text);
+    if(e.kind==="result" || e.kind==="tool_error"){
+      const first = e.text.split("\n")[0].slice(0,110);
+      return `<div class="ev ${e.kind}"><details><summary>↳ ${esc(first)}${e.text.length>first.length? " …":""}</summary><pre>${t}</pre></details></div>`;
+    }
+    const label = {user:"Ty", assistant:"Agent", done:"✅ Gotowe — podsumowanie", error:"Błąd"}[e.kind];
+    return `<div class="ev ${e.kind}">${label? `<div class="k">${label}</div>`:""}${e.kind==="tool"? "▸ ":""}${t}</div>`;
+  }).join("");
+  box.insertAdjacentHTML("beforeend", html);
+  if(jobState.autoscroll && jobState.tab==="log") window.scrollTo(0, document.body.scrollHeight);
+}
+
+function renderPlan(){
+  const el = $("#tab-plan"); const j = jobState.job; if(!el || !j) return;
+  const plan = j.plan || [];
+  el.innerHTML = `<div class="card plan">${plan.length? `<ul>${plan.map(p=>`<li class="${p.done?"d":""}">${esc(p.text)}</li>`).join("")}</ul>` : `<span class="muted">Agent jeszcze nie ułożył planu.</span>`}</div>
+    ${j.summary? `<div class="card"><div class="k muted small">PODSUMOWANIE</div><div class="summary">${esc(j.summary)}</div></div>`:""}
+    <div class="card"><div class="k muted small">POLECENIE</div><div class="summary">${esc(j.prompt)}</div></div>`;
+}
+
+async function loadFiles(){
+  const el = $("#tab-files"); el.innerHTML = `<div class="empty"><span class="spin"></span></div>`;
+  try{
+    const {files} = await api(`/api/jobs/${jobState.id}/files`);
+    el.innerHTML = files.length ? `<div class="card" style="padding:4px 12px">${files.map(f=>`<div class="file" data-p="${esc(f.path)}"><span>${esc(f.path)}</span><span>${fmtSize(f.size)}</span></div>`).join("")}</div>
+      <div class="row"><button onclick="loadFiles()">↻ Odśwież</button><a class="btn" href="/api/jobs/${jobState.id}/download?t=${token}">⬇ Pobierz wszystko (ZIP)</a></div>`
+      : `<div class="empty">Brak plików — agent jeszcze nic nie zapisał.</div>`;
+    el.querySelectorAll(".file").forEach(f => f.onclick = () => openFile(f.dataset.p));
+  }catch(e){ el.innerHTML = `<div class="empty">${esc(e.message)}</div>`; }
+}
+
+async function openFile(path){
+  try{
+    const f = await api(`/api/jobs/${jobState.id}/file?path=${encodeURIComponent(path)}`);
+    const m = document.createElement("div"); m.className="modal";
+    const raw = `/api/jobs/${jobState.id}/file?raw=1&path=${encodeURIComponent(path)}&t=${token}`;
+    m.innerHTML = `<div class="sheet"><header><h1 style="font-size:14px;font-family:var(--mono)">${esc(path)}</h1>
+      <a class="btn" href="${raw}">⬇</a><button class="ghost" id="cl">✕</button></header>
+      <pre>${f.binary? "(plik binarny — pobierz go przyciskiem ⬇)" : esc(f.content)}${f.truncated? "\n\n… (ucięto podgląd)":""}</pre></div>`;
+    document.body.append(m);
+    m.onclick = e => { if(e.target===m) m.remove(); };
+    $("#cl", m).onclick = () => m.remove();
+  }catch(e){ toast(e.message); }
+}
+
+async function sendMessage(){
+  const t = $("#msg").value.trim(); if(!t) return;
+  $("#send").disabled = true;
+  try{ await api(`/api/jobs/${jobState.id}/message`,{method:"POST", body:{text:t}}); $("#msg").value=""; $("#msg").style.height="auto"; jobState.autoscroll=true; clearTimers(); pollJob(); }
+  catch(e){ toast(e.message); $("#send").disabled=false; }
+}
+async function stopJob(){ if(!confirm("Zatrzymać agenta?")) return; await api(`/api/jobs/${jobState.id}/stop`,{method:"POST"}).catch(e=>toast(e.message)); toast("Zatrzymuję…"); }
+async function deleteJob(){ if(!confirm("Usunąć zadanie razem z plikami?")) return; await api(`/api/jobs/${jobState.id}`,{method:"DELETE"}).catch(e=>toast(e.message)); location.hash="#/"; }
+
+async function viewSettings(){
+  const s = await getSettings(true).catch(e=>{toast(e.message); return null;}); if(!s) return;
+  const keyField = (k, name, url) => `
+    <label>${name} — klucz API ${s.providers[k].key? `<span style="color:var(--acc)">✓ ustawiony (${esc(s.providers[k].key)}${s.providers[k].key_from_env?", ze zmiennej środowiskowej":""})</span>`:""}</label>
+    <input id="key_${k}" type="password" placeholder="${s.providers[k].key? "zostaw puste, by nie zmieniać":"wklej klucz"}" autocomplete="off">
+    <div class="hint">Klucz zdobędziesz na <a href="${url}" target="_blank" rel="noopener">${url.replace("https://","")}</a></div>`;
+  shell("Ustawienia", `
+    <div class="card">
+      ${keyField("gemini","Google Gemini","https://aistudio.google.com/apikey")}
+      ${keyField("nvidia","NVIDIA NIM","https://build.nvidia.com")}
+    </div>
+    <div class="card">
+      <label>Domyślny dostawca</label><select id="dp"><option value="gemini">Google Gemini</option><option value="nvidia">NVIDIA NIM</option></select>
+      <label>Domyślny model Gemini</label><input id="dmg" list="lg" placeholder="${esc(s.providers.gemini.default_model)}" value="${esc(s.default_model_gemini)}"><datalist id="lg">${s.providers.gemini.suggested.map(m=>`<option value="${esc(m)}">`).join("")}</datalist>
+      <label>Domyślny model NVIDIA</label><input id="dmn" list="ln" placeholder="${esc(s.providers.nvidia.default_model)}" value="${esc(s.default_model_nvidia)}"><datalist id="ln">${s.providers.nvidia.suggested.map(m=>`<option value="${esc(m)}">`).join("")}</datalist>
+    </div>
+    <div class="card">
+      <label>Powiadomienia push (ntfy.sh) — temat</label>
+      <input id="ntfy" placeholder="np. mati-agent-8f3k2" value="${esc(s.ntfy_topic)}">
+      <div class="hint">Zainstaluj aplikację <b>ntfy</b> na telefonie i zasubskrybuj ten sam temat — dostaniesz powiadomienie, gdy agent skończy. Wymyśl trudny do zgadnięcia temat.</div>
+    </div>
+    <button class="primary" id="save" style="width:100%;padding:14px">Zapisz</button>
+    <button class="ghost" style="width:100%;margin-top:14px" onclick="localStorage.removeItem('agent_token');token='';location.hash='#/login'">Wyloguj</button>
+  `, {back:"#/"});
+  $("#dp").value = s.default_provider || "gemini";
+  $("#save").onclick = async () => {
+    const body = {default_provider:$("#dp").value, default_model_gemini:$("#dmg").value, default_model_nvidia:$("#dmn").value, ntfy_topic:$("#ntfy").value};
+    if($("#key_gemini").value.trim()) body.key_gemini = $("#key_gemini").value.trim();
+    if($("#key_nvidia").value.trim()) body.key_nvidia = $("#key_nvidia").value.trim();
+    try{ await api("/api/settings",{method:"POST", body}); toast("Zapisano ✓"); viewSettings(); }catch(e){ toast(e.message); }
+  };
+}
+
+function router(){
+  clearTimers(); window.onscroll = null;
+  document.querySelectorAll(".modal").forEach(m => m.remove());
+  const h = location.hash || "#/";
+  if(!token && h!=="#/login"){ location.hash="#/login"; return; }
+  if(h==="#/login") return viewLogin();
+  if(h==="#/new") return viewNew();
+  if(h==="#/settings") return viewSettings();
+  const m = h.match(/^#\/job\/([\w\-]+)/); if(m) return viewJob(m[1]);
+  return viewList();
+}
+window.addEventListener("hashchange", router);
+router();
+</script>
+</body>
+</html>
